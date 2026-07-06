@@ -2,9 +2,11 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const guests = [
-  { firstName: 'Hairou-Dine', lastName: 'BIAOU', whatsappNumber: '+22961149410' },
-  { firstName: 'Jean', lastName: 'Kouassi', whatsappNumber: '+22961149411' },
-  { firstName: 'Fatou', lastName: 'Diallo', whatsappNumber: '+22961149412' },
+  { firstName: 'Saoud', lastName: 'LANDIOUN', whatsappNumber: '+97484124' },
+  { firstName: 'Rizkiath', lastName: 'YAYA NADJO', whatsappNumber: '+22995356886' },
+  { firstName: 'Célia', lastName: 'AYIVI', whatsappNumber: '+22996121994' },
+  { firstName: 'Elom', lastName: 'Tsaklidji', whatsappNumber: '+22997679061' },
+  { firstName: 'Ulrich', lastName: 'NAGO', whatsappNumber: '+22997138452' },
   // remplace/complète par tes vrais invités de test
 ];
 

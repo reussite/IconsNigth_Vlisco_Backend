@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const prisma = require('../config/database'); // ← ajoute cet import en haut si absent
+const prisma = require('../config/database');
 
 class AdminError extends Error {
   constructor(message, statusCode) {
@@ -8,6 +8,10 @@ class AdminError extends Error {
     this.statusCode = statusCode;
   }
 }
+
+// ==========================================================
+//  AUTHENTIFICATION
+// ==========================================================
 
 // Vérifie les identifiants et renvoie un token JWT si corrects
 function login(username, password) {
@@ -18,11 +22,10 @@ function login(username, password) {
     throw new AdminError("Configuration admin manquante côté serveur.", 500);
   }
 
-  // Vérifie le nom d'utilisateur ET le mot de passe
   const userOk = username === expectedUser;
   const passOk = bcrypt.compareSync(password, expectedHash);
 
-  // Message volontairement générique (ne dit pas si c'est le user ou le pass qui est faux)
+  // Message générique volontaire (ne révèle pas ce qui est faux)
   if (!userOk || !passOk) {
     throw new AdminError("Identifiants incorrects.", 401);
   }
@@ -36,10 +39,11 @@ function login(username, password) {
   return { token };
 }
 
-// ... (login et AdminError déjà présents) ...
+// ==========================================================
+//  STATISTIQUES
+// ==========================================================
 
 async function getStats() {
-  // Comptes globaux
   const [totalGuests, totalBookings] = await Promise.all([
     prisma.guest.count(),
     prisma.booking.count(),
@@ -77,7 +81,12 @@ async function getStats() {
     })),
   };
 }
-// ---- Liste des invités avec statut de réservation ----
+
+// ==========================================================
+//  GESTION DES INVITÉS (CRUD)
+// ==========================================================
+
+// Liste des invités avec leur statut de réservation
 async function listGuests() {
   const guests = await prisma.guest.findMany({
     orderBy: { createdAt: 'desc' },
@@ -95,7 +104,7 @@ async function listGuests() {
   }));
 }
 
-// ---- Ajouter un invité ----
+// Ajouter un invité
 async function createGuest({ firstName, lastName, whatsappNumber }) {
   const first = (firstName || '').trim();
   const last = (lastName || '').trim();
@@ -108,7 +117,6 @@ async function createGuest({ firstName, lastName, whatsappNumber }) {
     throw new AdminError("Format du numéro WhatsApp invalide.", 400);
   }
 
-  // Unicité du numéro
   const existing = await prisma.guest.findUnique({ where: { whatsappNumber: phone } });
   if (existing) {
     throw new AdminError("Un invité avec ce numéro WhatsApp existe déjà.", 409);
@@ -120,7 +128,7 @@ async function createGuest({ firstName, lastName, whatsappNumber }) {
   return guest;
 }
 
-// ---- Modifier un invité ----
+// Modifier un invité
 async function updateGuest(id, { firstName, lastName, whatsappNumber }) {
   const guestId = parseInt(id, 10);
   if (Number.isNaN(guestId)) throw new AdminError("Identifiant invalide.", 400);
@@ -165,7 +173,7 @@ async function updateGuest(id, { firstName, lastName, whatsappNumber }) {
   return updated;
 }
 
-// ---- Supprimer un invité ----
+// Supprimer un invité (refusé s'il a déjà réservé)
 async function deleteGuest(id) {
   const guestId = parseInt(id, 10);
   if (Number.isNaN(guestId)) throw new AdminError("Identifiant invalide.", 400);
@@ -176,7 +184,6 @@ async function deleteGuest(id) {
   });
   if (!guest) throw new AdminError("Invité introuvable.", 404);
 
-  // Sécurité : on refuse de supprimer un invité ayant déjà réservé
   if (guest.booking) {
     throw new AdminError(
       "Impossible de supprimer : cet invité a déjà réservé sa place.",
@@ -189,9 +196,11 @@ async function deleteGuest(id) {
 }
 
 module.exports = {
-  login, getStats,
-  listGuests, createGuest, updateGuest, deleteGuest,
+  login,
+  getStats,
+  listGuests,
+  createGuest,
+  updateGuest,
+  deleteGuest,
   AdminError,
 };
-
-

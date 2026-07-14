@@ -1,7 +1,8 @@
 const PDFDocument = require('pdfkit');
 
 const EVENT = {
-  name: 'ICONS NIGHT 2',
+  titleMain: 'VLISCO ICONS NIGHT',
+  titleAccent: 'Acte 2',
   tagline: "Et si, pour une nuit, vous deveniez l'icône qu'ils attendent ?",
   intro1: 'Vlisco vous invite à fouler le tapis rouge des icônes.',
   intro2: 'Un événement unique où le style est roi,',
@@ -45,20 +46,35 @@ function generateInvitationPdf({ firstName, lastName, invitationCode }) {
 
     let y = 70;
 
-    // Titre
+    // ---- Titre sur une seule ligne : "VLISCO ICONS NIGHT Acte 2" ----
+    // "VLISCO ICONS NIGHT" en gras, "Acte 2" en italique. Centré.
+    const titleSize = 28;
+    const mainText = EVENT.titleMain + ' ';
+    const accentText = EVENT.titleAccent;
+
+    doc.font('Helvetica-Bold').fontSize(titleSize);
+    const wMain = doc.widthOfString(mainText);
+    doc.font('Helvetica-BoldOblique').fontSize(titleSize);
+    const wAccent = doc.widthOfString(accentText);
+
+    const totalW = wMain + wAccent;
+    const startX = (W - totalW) / 2;
+
     doc
       .fillColor(NAVY)
       .font('Helvetica-Bold')
-      .fontSize(34)
-      .text(EVENT.name, 0, y, { align: 'center' });
+      .fontSize(titleSize)
+      .text(mainText, startX, y, { lineBreak: false, continued: true })
+      .font('Helvetica-BoldOblique')
+      .text(accentText, { lineBreak: false });
 
-    // Nom de l'invité — mis en évidence sous le titre
+    // ---- Nom de l'invité (sans M/Mme) ----
     y += 52;
     doc
       .fillColor(NAVY)
       .font('Helvetica-Oblique')
       .fontSize(16)
-      .text(`M/Mme ${firstName} ${lastName}`, cx, y, { align: 'center', width: contentW });
+      .text(`${firstName} ${lastName}`, cx, y, { align: 'center', width: contentW });
 
     // Petit trait de séparation sous le nom
     y += 30;
